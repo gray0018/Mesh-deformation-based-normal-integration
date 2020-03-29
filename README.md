@@ -28,5 +28,5 @@ Click [here](https://www.mathworks.com/help/matlab/matlab-engine-for-python.html
 
 Normal map             |  Reconstructed surface 
 :-------------------------:|:-------------------------:
-![](data/bunny.png)  |  ![](data/bunny.gif)
-![](data/scholar.png)  |  ![](data/scholar.gif)
+<img src="data/bunny.png" width="512px">  |  <img src="data/bunny.gif" width="512px">
+<img src="data/scholar.png" width="512px">  |  <img src="data/scholar.gif" width="512px">
