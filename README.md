@@ -27,10 +27,10 @@ Click [here](https://www.mathworks.com/help/matlab/matlab-engine-for-python.html
 ## Result
 
 <div class="image">
-    <div class="imgContainer" float="left">
-        <img src="data/bunny.png" width="50%"/>
+    <div class="imgContainer" style="float:left">
+        <img src="data/bunny.png" width="40%"/>
     </div>
-    <div class="imgContainer" float="left">
-        <img src="data/bunny.gif" width="50%"/>
+    <div class="imgContainer" style="float:left">
+        <img src="data/bunny.gif" width="40%"/>
     </div>
 </div>
