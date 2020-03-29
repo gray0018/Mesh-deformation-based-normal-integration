@@ -1,17 +1,5 @@
-<style>
-.column {
-  float: left;
-  width: 50%;
-  padding: 5px;
-}
 
-/* Clear floats after image containers */
-.row::after {
-  content: "";
-  clear: both;
-  display: table;
-}
-</style>
+<link href="style.css" rel="stylesheet"></link>
 # Surface-from-Gradients: An Approach Based on Discrete Geometry Processing
 
 ## What is the DGP-SfP?
