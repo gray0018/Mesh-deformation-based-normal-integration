@@ -27,11 +27,26 @@ Click [here](https://www.mathworks.com/help/matlab/matlab-engine-for-python.html
 ## Result
 <div class="row">
   <div class="column">
-    <img src="data/bunny.png" width="20%">
+    <img src="data/bunny.png">
   </div>
   <div class="column">
-    <img src="data/bunny.gif" width="20%">
+    <img src="data/bunny.gif">
   </div>
 </div>
 
 
+<style>
+
+.column {
+  float: left;
+  width: 50%;
+  padding: 5px;
+}
+
+/* Clear floats after image containers */
+.row::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+</style>
