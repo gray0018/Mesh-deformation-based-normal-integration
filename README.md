@@ -1,5 +1,4 @@
 
-<link href="style.css" rel="stylesheet"></link>
 # Surface-from-Gradients: An Approach Based on Discrete Geometry Processing
 
 ## What is the DGP-SfP?
@@ -36,4 +35,4 @@ Click [here](https://www.mathworks.com/help/matlab/matlab-engine-for-python.html
   </div>
 </div>
 
-
+<link href="style.css" rel="stylesheet"></link>
