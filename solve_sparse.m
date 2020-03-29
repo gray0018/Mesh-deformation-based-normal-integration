@@ -1,7 +1,10 @@
-function x = solve_sparse(A_path, b_path)
-    load(A_path, 'A');
-    load(b_path, 'b');
+function x = solve_sparse()
+    load('A.mat', 'A');
+    load('b.mat', 'b');
+    load('N.mat', 'N');
+    
     A = double(A);
     b = double(b);
-    x = A\b;
+    N = double(N);
+    x = (N*A)\(N*b);
 end
