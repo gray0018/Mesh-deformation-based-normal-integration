@@ -1,6 +1,3 @@
-
-<link href="data/style.css" rel="stylesheet"></link>
-
 # Surface-from-Gradients: An Approach Based on Discrete Geometry Processing
 
 ## What is the DGP-SfP?
@@ -28,12 +25,12 @@ We use Matlab to solve a sparse system of linear equations. You should have Matl
 Click [here](https://www.mathworks.com/help/matlab/matlab-engine-for-python.html) to know how to call Matlab from Python.
 
 ## Result
-<div class="row">
-  <div class="column">
-    <img src="data/bunny.png">
-  </div>
-  <div class="column">
-    <img src="data/bunny.gif">
-  </div>
-</div>
 
+<div class="image">
+    <div class="imgContainer" float="left">
+        <img src="data/bunny.png" width="50%"/>
+    </div>
+    <div class="imgContainer" float="left">
+        <img src="data/bunny.gif" width="50%"/>
+    </div>
+</div>
