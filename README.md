@@ -25,5 +25,13 @@ We use Matlab to solve a sparse system of linear equations. You should have Matl
 Click [here](https://www.mathworks.com/help/matlab/matlab-engine-for-python.html) to know how to call Matlab from Python.
 
 ## Result
-<a style="float:left;"><img border=0 src="data/bunny.png" width="512"></a><a style="float:left;"><img border=0 src="data/bunny.gif" width="512"></a>
+<div class="row">
+  <div class="column">
+    <img src="data/bunny.png" width="512">
+  </div>
+  <div class="column">
+    <img src="data/bunny.gif" width="512">
+  </div>
+</div>
+
 
