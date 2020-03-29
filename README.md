@@ -1,3 +1,17 @@
+<style>
+.column {
+  float: left;
+  width: 50%;
+  padding: 5px;
+}
+
+/* Clear floats after image containers */
+.row::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+</style>
 # Surface-from-Gradients: An Approach Based on Discrete Geometry Processing
 
 ## What is the DGP-SfP?
@@ -35,18 +49,3 @@ Click [here](https://www.mathworks.com/help/matlab/matlab-engine-for-python.html
 </div>
 
 
-<style>
-
-.column {
-  float: left;
-  width: 50%;
-  padding: 5px;
-}
-
-/* Clear floats after image containers */
-.row::after {
-  content: "";
-  clear: both;
-  display: table;
-}
-</style>
