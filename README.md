@@ -23,7 +23,7 @@ As for the normal maps' formats, we support all the formats which could be read 
 ## Dependencies
 - OpenCV-Python
 - NumPy
-- Scipy
+- SciPy
 - scikit-learn
 
 
