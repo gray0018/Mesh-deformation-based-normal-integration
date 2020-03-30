@@ -1,16 +1,13 @@
 # "Surface-from-Gradients: An Approach Based on Discrete Geometry Processing", W. Xie et al., CVPR 2014.
 # Implemented by Zhuoyu Yang, Matsushita Lab., Osaka University, Mar. 30th 2020.
 import cv2
-import os
 import sys
-import matlab.engine
 
 import numpy as np
 import scipy.sparse as sparse
 
-from scipy.io import savemat
-from scipy.io import loadmat
 from sklearn.preprocessing import normalize
+from scipy.sparse.linalg import spsolve
 
 def write_obj(filename, d, d_ind):
     f = open(filename, "w")
@@ -46,9 +43,13 @@ class DGP(object):
         self.vertices, self.vertices_count= self.construct_vertices()
         self.vertices_depth = np.zeros_like(self.vertices, dtype=np.float32)
 
-        self.construct_A()
-        self.construct_N()
-        self.eng = matlab.engine.start_matlab()
+        self.A = self.construct_A().tocsc()
+        self.N = self.construct_N().tocsc()
+        self.b = self.construct_b()
+        self.NA = self.N@self.A
+        self.Nb = self.N@self.b
+        self.NATNA = self.NA.T@self.NA
+        self.NATNb = self.NA.T@self.Nb
 
     def read_normal_map(self, path):
         '''
@@ -114,7 +115,7 @@ class DGP(object):
 
         A = sparse.coo_matrix((data, (row, col)), shape=(4*self.mesh_count, self.vertices_count))
 
-        savemat('A.mat', {'A': A}) # save A into A.mat, solve_sparse.m use A.mat later
+        return A
 
     def construct_b(self):
         b = []
@@ -132,8 +133,9 @@ class DGP(object):
                         b.append(c-(self.n[i,j,0]/2+self.n[i,j,1]/2)/self.n[i,j,2])
                         b.append(c-(self.n[i,j,0]/-2+self.n[i,j,1]/-2)/self.n[i,j,2])
                         b.append(c-(self.n[i,j,0]/2+self.n[i,j,1]/-2)/self.n[i,j,2])
+        
         b = np.array(b).reshape(-1, 1)
-        savemat('b.mat', {'b': b}) # save b into b.mat, solve_sparse.m use b.mat later
+        return b
 
     def construct_N(self):
         N_ = np.eye(4)-0.25
@@ -141,19 +143,16 @@ class DGP(object):
         indptr = range(self.mesh_count+1)
         indices = range(self.mesh_count)
         N = sparse.bsr_matrix((data,indices,indptr))
-        savemat("N.mat", {'N': N}) # save N into N.mat, solve_sparse.m use N.mat later
+        return N
 
     def DGP_closed(self):
-        self.construct_b()
-        x = np.asarray(self.eng.solve_sparse()).reshape(-1) # solve NAx = Nb by Matlab
+        
+        x = spsolve(self.NATNA, self.NATNb) # solve NATNAx = NATNb by SciPy
         for i in range(self.ilim+1):
             for j in range(self.jlim+1):
                 if self.vertices[i, j] != 0:
                     self.vertices_depth[i, j] = x[self.vertices[i, j]-1]
 
-        os.remove("A.mat") # remove *.mat file generated when solving NAx = Nb by Matlab
-        os.remove("N.mat")
-        os.remove("b.mat")
 
 if __name__ == '__main__':
 

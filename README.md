@@ -21,8 +21,11 @@ python main.py data/scholar.png
 As for the normal maps' formats, we support all the formats which could be read by OpenCV(e.g. png, jpg, bmp).
 
 ## Dependencies
-We use Matlab to solve a sparse system of linear equations. You should have Matlab pre-installed on your device.<br>
-Click [here](https://www.mathworks.com/help/matlab/matlab-engine-for-python.html) to know how to call Matlab from Python.
+- OpenCV-Python
+- NumPy
+- Scipy
+- scikit-learn
+
 
 ## Result
 
