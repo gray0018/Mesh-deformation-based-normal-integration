@@ -82,9 +82,8 @@ class DGP(object):
 
             n = normalize(n.reshape(-1,3)).reshape(n.shape)
 
-            # fill background with [0,0,0]
-            n[mask_bg] = [0,0,0]
-
+        # fill background with [0,0,0]
+        n[mask_bg] = [0,0,0]
         return n, mask_bg
 
     def construct_vertices(self):
@@ -158,7 +157,6 @@ class DGP(object):
             for j in range(self.jlim+1):
                 if self.vertices[i, j] != 0:
                     self.vertices_depth[i, j] = x[self.vertices[i, j]-1]
-
 
 if __name__ == '__main__':
 
