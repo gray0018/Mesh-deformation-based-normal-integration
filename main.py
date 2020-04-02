@@ -63,21 +63,27 @@ class DGP(object):
             n: normalized normal map
             mask_bg: background mask
         '''
-        n = cv2.imread(path)
 
-        n[...,0], n[...,2] = n[...,2], n[...,0].copy() # Change BGR to RGB
-        mask_bg = (n[...,2] == 0) # get background mask
-        n = n.astype(np.float32) # uint8 -> float32
+        if ".npy" in path:
+            n = np.load(path)
+            mask_bg = (n[...,2] == 0) # get background mask
 
-        # x,y:[0,255]->[-1,1] z:[128,255]->[0,1]
-        n[...,0] = n[...,0]*2/255-1
-        n[...,1] = n[...,1]*2/255-1
-        n[...,2] = (n[...,2]-128)/127
+        else:
+            n = cv2.imread(path)
 
-        n = normalize(n.reshape(-1,3)).reshape(n.shape)
+            n[...,0], n[...,2] = n[...,2], n[...,0].copy() # Change BGR to RGB
+            mask_bg = (n[...,2] == 0) # get background mask
+            n = n.astype(np.float32) # uint8 -> float32
 
-        # fill background with [0,0,0]
-        n[mask_bg] = [0,0,0]
+            # x,y:[0,255]->[-1,1] z:[128,255]->[0,1]
+            n[...,0] = n[...,0]*2/255-1
+            n[...,1] = n[...,1]*2/255-1
+            n[...,2] = (n[...,2]-128)/127
+
+            n = normalize(n.reshape(-1,3)).reshape(n.shape)
+
+            # fill background with [0,0,0]
+            n[mask_bg] = [0,0,0]
 
         return n, mask_bg
 
