@@ -18,7 +18,7 @@ python main.py data/bunny.png
 python main.py data/scholar.png
 ```
 
-As for the normal maps' formats, we support all the formats which could be read by OpenCV(e.g. png, jpg, bmp).
+As for the normal maps' formats, we support all the formats which could be read by OpenCV(e.g. png, jpg, bmp). Notice that the background of the normal map should be filled with pure black, (0, 0, 0).
 
 ## Dependencies
 - OpenCV-Python
