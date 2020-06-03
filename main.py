@@ -1,4 +1,3 @@
-# "Surface-from-Gradients: An Approach Based on Discrete Geometry Processing", W. Xie et al., CVPR 2014.
 # Implemented by Zhuoyu Yang, Matsushita Lab., Osaka University, Mar. 30th 2020.
 import cv2
 import sys
