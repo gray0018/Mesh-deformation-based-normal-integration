@@ -33,8 +33,9 @@ Normal map             |  Reconstructed surface
 <img src="data/scholar.png" width="512px">  |  <img src="data/scholar.gif" width="512px">
 
 ### Adding depth prior
-- We use the normal map of standord bunny as input, and add sparse depth prior from different part.
+- We use the normal map of standord bunny as input, and add sparse depth prior from different parts.
 <img src="data/normal_depth_prior.svg" >
+
 - Below is the mean absolute error map of not adding depth prior and adding depth prior. We can see that adding depth prior significantly reduce the depth error.
 <img src="data/with_and_wo_depth_prior.svg" >
 
