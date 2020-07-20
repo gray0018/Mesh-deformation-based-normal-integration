@@ -9,6 +9,13 @@ import scipy.sparse as sparse
 from sklearn.preprocessing import normalize
 from scipy.sparse.linalg import spsolve
 
+def write_depth_map(filename, depth, mask_bg):
+    from scipy.signal import convolve2d
+    mask = np.array([0.25,0.25,0.25,0.25]).reshape(2,2)
+    depth = convolve2d(depth, mask, mode="valid")
+    depth[mask_bg] = np.nan
+    np.save(filename, depth)
+
 def write_obj(filename, d, d_ind):
     f = open(filename, "w")
 
@@ -206,3 +213,6 @@ if __name__ == '__main__':
 
     print("Start writing obj file...")
     write_obj("output.obj", task.vertices_depth, task.vertices) # write obj file
+    print("Start writing depth map...")
+    write_depth_map("output_depth.npy", task.vertices_depth, task.mask_bg) # write depth file
+    print("Finish!")
