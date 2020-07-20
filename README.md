@@ -1,10 +1,9 @@
-# Surface-from-Gradients: An Approach Based on Discrete Geometry Processing
+# Mesh deformation based normal integration
 
-## What is the DGP-SfP?
-DGP-SfP is an efficient method to reconstruct surfaces from given normal maps.<br>
-DGP is an abbreviation for Discrete Geometry Processing.<br>
-SfP is an abbreviation for Surface-from-Gradients.<br>
-DGP-SfP was first proposed in "Surface-from-Gradients: An Approach Based on Discrete Geometry Processing", W. Xie et al., CVPR 2014.
+## What is the mesh deformation based normal integration?
+Mesh deformation based normal integration is an efficient method to reconstruct surfaces from given normal maps. We initialize an plane mesh and deform it to let surface normal of each face parallel to the given normal map. We can also add sparse depth prior to refine the result.<br>
+
+
 
 ## How to use?
 Clone the repository and run the main.py:
@@ -16,19 +15,32 @@ We have already prepared normal maps for testing. They are put under /data. You 
 ```
 python main.py data/scholar.png
 ```
+If you want to add depth prior, you can try:
+```
+python main.py data/bunny_normal.npy data/bunny_sparse_depth.npy
+```
 
-As for the normal maps' formats, we support all the formats which could be read by OpenCV(e.g. png, jpg, bmp).<br>
-**Notice that the background of the normal map should be filled with pure black, (0, 0, 0)**.
+- As for the normal maps' formats, we support all the formats which could be read by OpenCV(e.g. png, jpg, bmp) and also npy file in numpy.<br>
+**Notice that the background of the normal map should be filled (0, 0, 0)**.<br>
+- For adding sparse depth prior, **keep the resolution of depth map same with the normal map**. For unused pixels in depth map, **set them into NaN**. And **use npy format for depth map** to ensure the accuracy<br>
+
+
+## Result
+
+### Without adding depth prior
+Normal map             |  Reconstructed surface 
+:-------------------------:|:-------------------------:
+<img src="data/scholar.png" width="512px">  |  <img src="data/scholar.gif" width="512px">
+
+### Adding depth prior
+- We use the normal map of standord bunny as input, and add sparse depth prior from different part.
+<img src="data/normal_depth_prior.svg" >
+- Below is the mean absolute error map of not adding depth prior and adding depth prior. We can see that adding depth prior significantly reduce the depth error.
+<img src="data/with_and_wo_depth_prior.svg" >
+
 
 ## Dependencies
 - OpenCV-Python
 - NumPy
 - SciPy
 - scikit-learn
-
-
-## Result
-
-Normal map             |  Reconstructed surface 
-:-------------------------:|:-------------------------:
-<img src="data/scholar.png" width="512px">  |  <img src="data/scholar.gif" width="512px">
