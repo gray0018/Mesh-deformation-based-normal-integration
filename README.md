@@ -8,7 +8,7 @@ Mesh deformation based normal integration is an efficient method to reconstruct 
 ## How to use?
 Clone the repository and run the main.py:
 ```
-python main.py filename_of_normal_map
+python main.py filename_of_normal_map (filename_of_sparse_depth_map)
 ```
 
 We have already prepared normal maps for testing. They are put under /data. You can run:
