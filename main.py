@@ -1,4 +1,5 @@
 # Implemented by Zhuoyu Yang, Matsushita Lab., Osaka University, Mar. 30th 2020.
+# Modified at July 20th 2020. Support adding depth prior.
 import cv2
 import sys
 
@@ -10,13 +11,13 @@ from scipy.sparse.linalg import spsolve
 
 def write_obj(filename, d, d_ind):
     f = open(filename, "w")
-    
+
     ind = np.zeros_like(d,dtype=np.int32)
     mask = (d_ind != 0)
     ind[mask] = range(1, np.sum(mask.astype(np.int32))+1)
-    
+
     h, w = d.shape
-    
+
     for i in range(h):
         for j in range(w):
             if ind[i, j]:
@@ -30,23 +31,35 @@ def write_obj(filename, d, d_ind):
                     f.write("f {0} {1} {2}\n".format(ind[i, j], ind[i+1, j], ind[i+1, j+1]))
     f.close()
 
-class DGP(object):
+class Normal_Integration(object):
 
-    def __init__(self, path):
-        self.n, self.mask_bg = self.read_normal_map(path) # read normal map and background mask
-        self.N = None
+    def __init__(self, nomral_path, depth_path=None, d_lambda=100): # you can tune d_lambda to decide how much the depth prior will influence the result.
+        self.n, self.mask_bg = self.read_normal_map(nomral_path) # read normal map and background mask
+        self.N = None # mean-substraction matrix N defined in equation (5), "Surface-from-Gradients: An Approach Based on Discrete Geometry Processing"
+        self.d_lambda = d_lambda # lambda for depth prior
 
-        self.ilim, self.jlim = self.mask_bg.shape[0], self.mask_bg.shape[1]
-        self.mesh_count = np.sum((~self.mask_bg).astype(np.int32))
+        if depth_path is not None:
+            self.d = np.load(depth_path)
+        else:
+            self.d = None
 
-        self.vertices, self.vertices_count= self.construct_vertices()
-        self.vertices_depth = np.zeros_like(self.vertices, dtype=np.float32)
+        self.ilim, self.jlim = self.mask_bg.shape[0], self.mask_bg.shape[1] # size of normal map and mask
+        self.mesh_count = np.sum((~self.mask_bg).astype(np.int32)) # how many pixels in the normal map
 
+        self.vertices, self.vertices_count= self.construct_vertices() # indices for the vertices
+        self.vertices_depth = np.zeros_like(self.vertices, dtype=np.float32) # depth for the vertices
+
+        # below we are going to solve NAx=Nb, let's construct them first
         self.A = self.construct_A().tocsc()
         self.N = self.construct_N().tocsc()
         self.b = self.construct_b()
         self.NA = self.N@self.A
         self.Nb = self.N@self.b
+        
+        if self.d is not None:
+            self.add_depth_prior()
+
+        # since NA is a tall matrix, we use normal equation NA.T@NA@x=NA.T@Nb to solve this linear system
         self.NATNA = self.NA.T@self.NA
         self.NATNb = self.NA.T@self.Nb
 
@@ -132,12 +145,11 @@ class DGP(object):
                         b.append(self.vertices_depth[i+1,j])
                         b.append(self.vertices_depth[i+1,j+1])
                     else:
-                        c = 0.25*(self.vertices_depth[i,j]+self.vertices_depth[i,j+1]+self.vertices_depth[i+1,j]+self.vertices_depth[i+1,j+1])
-                        b.append(c-(self.n[i,j,0]/-2+self.n[i,j,1]/2)/self.n[i,j,2])
-                        b.append(c-(self.n[i,j,0]/2+self.n[i,j,1]/2)/self.n[i,j,2])
-                        b.append(c-(self.n[i,j,0]/-2+self.n[i,j,1]/-2)/self.n[i,j,2])
-                        b.append(c-(self.n[i,j,0]/2+self.n[i,j,1]/-2)/self.n[i,j,2])
-        
+                        b.append(-(self.n[i,j,0]/-2+self.n[i,j,1]/2)/self.n[i,j,2])
+                        b.append(-(self.n[i,j,0]/2+self.n[i,j,1]/2)/self.n[i,j,2])
+                        b.append(-(self.n[i,j,0]/-2+self.n[i,j,1]/-2)/self.n[i,j,2])
+                        b.append(-(self.n[i,j,0]/2+self.n[i,j,1]/-2)/self.n[i,j,2])
+
         b = np.array(b).reshape(-1, 1)
         return b
 
@@ -149,19 +161,48 @@ class DGP(object):
         N = sparse.bsr_matrix((data,indices,indptr))
         return N
 
-    def DGP_closed(self):
-        
+    def add_depth_prior(self):
+        row = 0
+        col = []
+        b = []
+        for i in range(self.ilim):
+            for j in range(self.jlim):
+                if ~np.isnan(self.d[i,j]):
+                    row += 1
+                    col.append(self.vertices[i,j]-1)
+                    col.append(self.vertices[i,j+1]-1)
+                    col.append(self.vertices[i+1,j]-1)
+                    col.append(self.vertices[i+1,j+1]-1)
+                    b.append(self.d_lambda*self.d[i,j])
+        row = [i//4 for i in range(row*4)]
+        data = [self.d_lambda*1/4 for i in row]
+        A = sparse.coo_matrix((data, (row, col)), shape=(len(row)//4, self.vertices_count))
+        b = np.array(b).reshape(-1, 1)
+        self.NA = sparse.vstack([self.NA, A])
+        self.Nb = np.vstack([self.Nb, b])
+
+    def mesh_deformation(self):
         x = spsolve(self.NATNA, self.NATNb) # solve NATNAx = NATNb by SciPy
         for i in range(self.ilim+1):
             for j in range(self.jlim+1):
                 if self.vertices[i, j] != 0:
-                    self.vertices_depth[i, j] = x[self.vertices[i, j]-1]
+                    self.vertices_depth[i, j] = x[self.vertices[i, j]-1] # since x is vertorized depth, we need to put it back to matrix form by using indices of vertices
 
 if __name__ == '__main__':
 
-    path = sys.argv[1]
-    
-    task = DGP(path)
-    task.DGP_closed() # DGP step
+    normal_path = sys.argv[1]
 
+    if len(sys.argv)>2: #input params include depth map path
+        depth_path = sys.argv[2]
+        print("Start reading normal map and depth map...")
+        task = Normal_Integration(normal_path, depth_path)
+        print("Start normal integration...")
+        task.mesh_deformation()
+    else:
+        print("Start reading normal map...")
+        task = Normal_Integration(normal_path)
+        print("Start normal integration...")
+        task.mesh_deformation()
+
+    print("Start writing obj file...")
     write_obj("output.obj", task.vertices_depth, task.vertices) # write obj file
