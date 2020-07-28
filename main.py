@@ -10,7 +10,7 @@ from sklearn.preprocessing import normalize
 from scipy.sparse.linalg import spsolve
 
 # command line parser
-parser = argparse.ArgumentParser(description='Normal Integration')
+parser = argparse.ArgumentParser(description='Normal Integration by mesh deformation')
 parser.add_argument('normal', help='the path of normal map')
 parser.add_argument('-d', '--depth', default=None, help='the path of depth prior')
 parser.add_argument('--d_lambda', type=int, default=100, help='how much will the depth prior influence the result')
