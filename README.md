@@ -8,17 +8,21 @@ Mesh deformation based normal integration is an efficient method to reconstruct 
 ## How to use?
 Clone the repository and run the main.py:
 ```
-python main.py filename_of_normal_map (filename_of_sparse_depth_map)
+python main.py filename_of_normal_map
 ```
-
 We have already prepared normal maps for testing. They are put under /data. You can run:
 ```
 python main.py data/scholar.png
 ```
 If you want to add depth prior, you can try:
 ```
-python main.py data/bunny_normal.npy data/bunny_sparse_depth.npy
+python main.py data/bunny_normal.npy -d data/bunny_sparse_depth.npy
 ```
+For more information:
+```
+python main.py -h
+```
+
 
 - As for the normal maps' formats, we support all the formats which could be read by OpenCV(e.g. png, jpg, bmp) and also npy file in numpy.<br>
 **Notice that the background of the normal map should be filled (0, 0, 0)**.<br>

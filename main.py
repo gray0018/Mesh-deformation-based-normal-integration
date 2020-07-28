@@ -1,7 +1,7 @@
 # Implemented by Zhuoyu Yang, Matsushita Lab., Osaka University, Mar. 30th 2020.
 # Modified at July 20th 2020. Support adding depth prior.
 import cv2
-import sys
+import argparse
 
 import numpy as np
 import scipy.sparse as sparse
@@ -9,10 +9,17 @@ import scipy.sparse as sparse
 from sklearn.preprocessing import normalize
 from scipy.sparse.linalg import spsolve
 
+# command line parser
+parser = argparse.ArgumentParser(description='Normal Integration')
+parser.add_argument('normal', help='the path of normal map')
+parser.add_argument('-d', '--depth', default=None, help='the path of depth prior')
+parser.add_argument('--d_lambda', type=int, default=100, help='how much will the depth prior influence the result')
+parser.add_argument('-o', '--output', default='output', help='name of the output object and depth map')
+
 def write_depth_map(filename, depth, mask_bg):
     from scipy.signal import convolve2d
     mask = np.array([0.25,0.25,0.25,0.25]).reshape(2,2)
-    depth = convolve2d(depth, mask, mode="valid")
+    depth = convolve2d(depth, mask, mode="valid") # keep the resolution of depth map same with the input normal map
     depth[mask_bg] = np.nan
     np.save(filename, depth)
 
@@ -196,23 +203,15 @@ class Normal_Integration(object):
                     self.vertices_depth[i, j] = x[self.vertices[i, j]-1] # since x is vertorized depth, we need to put it back to matrix form by using indices of vertices
 
 if __name__ == '__main__':
+    args = parser.parse_args()
 
-    normal_path = sys.argv[1]
-
-    if len(sys.argv)>2: #input params include depth map path
-        depth_path = sys.argv[2]
-        print("Start reading normal map and depth map...")
-        task = Normal_Integration(normal_path, depth_path)
-        print("Start normal integration...")
-        task.mesh_deformation()
-    else:
-        print("Start reading normal map...")
-        task = Normal_Integration(normal_path)
-        print("Start normal integration...")
-        task.mesh_deformation()
+    print("Start reading input data...")
+    task = Normal_Integration(args.normal, args.depth, args.d_lambda)
+    print("Start normal integration...")
+    task.mesh_deformation()
 
     print("Start writing obj file...")
-    write_obj("output.obj", task.vertices_depth, task.vertices) # write obj file
+    write_obj("{0}.obj".format(args.output), task.vertices_depth, task.vertices) # write obj file
     print("Start writing depth map...")
-    write_depth_map("output_depth.npy", task.vertices_depth, task.mask_bg) # write depth file
+    write_depth_map("{0}_depth.npy".format(args.output), task.vertices_depth, task.mask_bg) # write depth file
     print("Finish!")
