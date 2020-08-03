@@ -33,24 +33,19 @@ def write_depth_map(filename, depth, mask, v_mask, depth_type='pixel'):
 
 def write_obj(filename, d, d_ind):
     f = open(filename, "w")
-
-    ind = np.zeros_like(d,dtype=np.int32)
-    mask = (d_ind != 0)
-    ind[mask] = range(1, np.sum(mask.astype(np.int32))+1)
-
     h, w = d.shape
 
     for i in range(h):
         for j in range(w):
-            if ind[i, j]:
+            if d_ind[i, j]:
                 f.write("v {0} {1} {2}\n".format(j-0.5, h-(i-0.5), d[i, j]))
     for i in range(h):
         for j in range(w):
-            if ind[i, j] and j+1<w and i+1<h:
-                if ind[i, j+1] and ind[i+1, j+1]:
-                    f.write("f {0} {1} {2}\n".format(ind[i, j], ind[i+1, j+1], ind[i, j+1]))
-                if ind[i+1, j] and ind[i+1, j+1]:
-                    f.write("f {0} {1} {2}\n".format(ind[i, j], ind[i+1, j], ind[i+1, j+1]))
+            if d_ind[i, j] and j+1<w and i+1<h:
+                if d_ind[i, j+1] and d_ind[i+1, j+1]:
+                    f.write("f {0} {1} {2}\n".format(d_ind[i, j], d_ind[i+1, j+1], d_ind[i, j+1]))
+                if d_ind[i+1, j] and d_ind[i+1, j+1]:
+                    f.write("f {0} {1} {2}\n".format(d_ind[i, j], d_ind[i+1, j], d_ind[i+1, j+1]))
     f.close()
 
 class Normal_Integration(object):
