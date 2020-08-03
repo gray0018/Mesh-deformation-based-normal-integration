@@ -18,6 +18,8 @@ parser.add_argument('--d_lambda', type=int, default=100, help='how much will the
 parser.add_argument('-o', '--output', default='output', help='name of the output object and depth map')
 parser.add_argument('--vertex_depth', dest='depth_type', action='store_const',
                     const='vertex', default='pixel', help='output vertex depth map, by default pixel depth map')
+parser.add_argument('--obj', dest='write_obj', action='store_const',
+                    const=True, default=False, help='write wavefront obj file, by default False')
 
 def write_depth_map(filename, depth, mask, v_mask, depth_type='pixel'):
     if depth_type == 'pixel':
@@ -199,10 +201,11 @@ if __name__ == '__main__':
 
     end = time()
     print("Time elapsed: {:0.2f}".format(end - start))
-    np.save(args.output+'_woloop_time', end - start)
 
-    print("Start writing obj file...")
-    write_obj("{0}.obj".format(args.output), task.v_depth, task.v_index) # write obj file
+    if args.write_obj:
+        print("Start writing obj file...")
+        write_obj("{0}.obj".format(args.output), task.v_depth, task.v_index) # write obj file
+
     print("Start writing depth map...")
     write_depth_map("{0}_depth.npy".format(args.output), task.v_depth, task.mask, task.v_mask, depth_type=args.depth_type) # write depth file
     print("Finish!")
