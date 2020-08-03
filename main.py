@@ -199,6 +199,7 @@ if __name__ == '__main__':
 
     end = time()
     print("Time elapsed: {:0.2f}".format(end - start))
+    np.save(args.output+'_woloop_time', end - start)
 
     print("Start writing obj file...")
     write_obj("{0}.obj".format(args.output), task.v_depth, task.v_index) # write obj file
