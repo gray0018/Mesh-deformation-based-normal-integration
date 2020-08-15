@@ -180,7 +180,7 @@ class Normal_Integration(object):
         return N.tocsc()
 
     def mesh_deformation(self):
-        x = sparseqr.solve(self.NA, self.Nb, tolerance=0) # solve NAx = Nb by PySPQR
+        x = sparseqr.solve(self.NA, self.Nb) # solve NAx = Nb by PySPQR
         self.v_depth[self.v_mask] = x.reshape(-1)
 
 if __name__ == '__main__':
