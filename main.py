@@ -32,25 +32,43 @@ def write_depth_map(filename, depth, mask, v_mask, depth_type='pixel'):
         depth[~v_mask] = np.nan
     np.save(filename, depth)
 
+
 def write_obj(filename, d, d_ind):
     obj = open(filename, "w")
     h, w = d.shape
 
-    v = []
-    f = []
-    for i in range(h):
-        for j in range(w):
-            if d_ind[i, j]:
-                v.append("v {0} {1} {2}\n".format(j-0.5, h-(i-0.5), d[i, j]))
-                if j+1<w and i+1<h:
-                    if d_ind[i, j+1] and d_ind[i+1, j+1]:
-                        f.append("f {0} {1} {2}\n".format(d_ind[i, j], d_ind[i+1, j+1], d_ind[i, j+1]))
-                    if d_ind[i+1, j] and d_ind[i+1, j+1]:
-                        f.append("f {0} {1} {2}\n".format(d_ind[i, j], d_ind[i+1, j], d_ind[i+1, j+1]))
-    obj.write(''.join(v))
-    obj.write(''.join(f))
+    x = np.arange(0.5, w, 1)
+    y = np.arange(h-0.5, 0, -1)
+    xx, yy = np.meshgrid(x, y)
+    mask = d_ind>0
+    
+    xyz = np.vstack((xx[mask], yy[mask], d[mask])).T
+    obj.write(''.join(["v {0} {1} {2}\n".format(x, y, z) for x, y, z in xyz])) # write vertices into obj file
+
+    right = np.roll(d_ind, -1, axis=1)
+    right[:, -1] = 0
+    right_mask = right>0
+
+    down = np.roll(d_ind, -1, axis=0)
+    down[-1, :] = 0
+    down_mask = down>0
+
+    rd = np.roll(d_ind, -1, axis=1)
+    rd = np.roll(rd, -1, axis=0)
+    rd[-1, :] = 0
+    rd[:, -1] = 0
+    rd_mask = rd>0
+
+    up_tri = mask&rd_mask&right_mask # counter clockwise
+    low_tri = mask&down_mask&rd_mask # counter clockwise
+
+    xyz = np.vstack((d_ind[up_tri], rd[up_tri], right[up_tri])).T
+    obj.write(''.join(["f {0} {1} {2}\n".format(x, y, z) for x, y, z in xyz])) # write upper triangle facet into obj file
+    xyz = np.vstack((d_ind[low_tri], down[low_tri], rd[low_tri])).T
+    obj.write(''.join(["f {0} {1} {2}\n".format(x, y, z) for x, y, z in xyz])) # write lower triangle facet into obj file
 
     obj.close()
+
 
 class Normal_Integration(object):
 
