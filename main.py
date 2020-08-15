@@ -2,12 +2,13 @@
 # Modified at July 20th 2020. Support adding depth prior.
 import cv2
 import argparse
+import sparseqr
 
 import numpy as np
 import scipy.sparse as sparse
 
+
 from time import time
-from scipy.sparse.linalg import spsolve
 from sklearn.preprocessing import normalize
 
 # command line parser
@@ -85,10 +86,6 @@ class Normal_Integration(object):
             A, b = self.add_depth_prior(depth_path)
             self.NA = sparse.vstack([self.NA, A])
             self.Nb = np.vstack([self.Nb, b])
-
-        # since NA is a tall matrix, we use normal equation NA.T@NA@x=NA.T@Nb to solve this linear system
-        self.NATNA = self.NA.T@self.NA
-        self.NATNb = self.NA.T@self.Nb
 
     def add_depth_prior(self, depth_path):
 
@@ -183,8 +180,8 @@ class Normal_Integration(object):
         return N.tocsc()
 
     def mesh_deformation(self):
-        x = spsolve(self.NATNA, self.NATNb) # solve NATNAx = NATNb by SciPy
-        self.v_depth[self.v_mask] = x
+        x = sparseqr.solve(self.NA, self.Nb, tolerance=0) # solve NAx = Nb by PySPQR
+        self.v_depth[self.v_mask] = x.reshape(-1)
 
 if __name__ == '__main__':
 
