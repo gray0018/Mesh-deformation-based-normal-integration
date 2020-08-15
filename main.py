@@ -110,7 +110,7 @@ class Normal_Integration(object):
         data = 1/4*data*self.d_lambda
         
         # build A for Ax=b
-        A = sparse.coo_matrix((data, (row, col)), shape=(d_count, self.v_count)).tocsc()
+        A = sparse.coo_matrix((data, (row, col)), shape=(d_count, self.v_count))
         # build b for Ax=b
         b = d[d_mask].reshape(-1,1)*self.d_lambda
         
@@ -130,7 +130,7 @@ class Normal_Integration(object):
         y = self.n[...,1][self.mask]
         z = -self.n[...,2][self.mask]
         # build A for Ax=b
-        A = sparse.coo_matrix((data, (row, col-1)), shape=(4*self.mesh_count, self.v_count)).tocsc()
+        A = sparse.coo_matrix((data, (row, col-1)), shape=(4*self.mesh_count, self.v_count))
         # build b for Ax=b
         b = np.vstack(((x/-2+y/2)/z,(x/2+y/2)/z,(x/-2+y/-2)/z,(x/2+y/-2)/z)).T.reshape(-1, 1)
 
@@ -177,7 +177,7 @@ class Normal_Integration(object):
         indptr = range(self.mesh_count+1)
         indices = range(self.mesh_count)
         N = sparse.bsr_matrix((data,indices,indptr))
-        return N.tocsc()
+        return N
 
     def mesh_deformation(self):
         x = sparseqr.solve(self.NA, self.Nb) # solve NAx = Nb by PySPQR
