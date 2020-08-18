@@ -1,0 +1,10 @@
+Solver                Size        Memory        Time
+numpy/spsolve       2000*2000     16.0GB        16.7min
+                    3000*3000     Not enough memory to perform factorization.Segmentation fault (core dumped)
+
+PySPQR              2000*2000     8.6GB         4.5min      
+                    3000*3000     20.0GB        14.4min
+                    4000*4000     34.3GB        32.0min
+                    5000*5000     56.5GB        80.4min
+                    6000*6000     90.0GB        190.0min
+                    9000*5000     110.2GB       222.8min
