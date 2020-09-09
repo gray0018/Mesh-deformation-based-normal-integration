@@ -15,7 +15,7 @@ from sklearn.preprocessing import normalize
 parser = argparse.ArgumentParser(description='Normal Integration by mesh deformation')
 parser.add_argument('normal', help='the path of normal map')
 parser.add_argument('-d', '--depth', default=None, help='the path of depth prior')
-parser.add_argument('--d_lambda', type=float, default=100, help='how much will the depth prior influence the result')
+parser.add_argument('--d_lambda', type=float, default=1, help='how much will the depth prior influence the result')
 parser.add_argument('-o', '--output', default='output', help='name of the output object and depth map')
 parser.add_argument('--vertex_depth', dest='depth_type', action='store_const',
                     const='vertex', default='pixel', help='output vertex depth map, by default pixel depth map')
