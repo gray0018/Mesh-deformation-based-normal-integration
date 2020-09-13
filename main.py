@@ -121,7 +121,7 @@ class Normal_Integration(object):
         ld = np.pad(d_mask, [(1, 0), (0, 1)], mode='constant') # mask for left down vertices
         rd = np.pad(d_mask, [(1, 0), (1, 0)], mode='constant') # mask for right down vertices
 
-        col = np.vstack((self.v_index[lu],self.v_index[ru],self.v_index[ld],self.v_index[rd])).T.ravel()
+        col = np.vstack((self.v_index[lu],self.v_index[ru],self.v_index[ld],self.v_index[rd])).T.ravel()-1 #should -1 to start from 0
 
         # build data for sparse coo matrix
         data = np.ones(4*d_count)
