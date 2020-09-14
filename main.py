@@ -2,11 +2,9 @@
 # Modified at July 20th 2020. Support adding depth prior.
 import cv2
 import argparse
-import sparseqr
 
 import numpy as np
 import scipy.sparse as sparse
-
 
 from time import time
 from sklearn.preprocessing import normalize
@@ -15,12 +13,16 @@ from sklearn.preprocessing import normalize
 parser = argparse.ArgumentParser(description='Normal Integration by mesh deformation')
 parser.add_argument('normal', help='the path of normal map')
 parser.add_argument('-d', '--depth', default=None, help='the path of depth prior')
-parser.add_argument('--d_lambda', type=float, default=100, help='how much will the depth prior influence the result')
+parser.add_argument('--d_lambda', type=float, default=0.1, help='how much will the depth prior influence the result')
 parser.add_argument('-o', '--output', default='output', help='name of the output object and depth map')
 parser.add_argument('--vertex_depth', dest='depth_type', action='store_const',
                     const='vertex', default='pixel', help='output vertex depth map, by default pixel depth map')
 parser.add_argument('--obj', dest='write_obj', action='store_const',
                     const=True, default=False, help='write wavefront obj file, by default False')
+parser.add_argument('--spsolve', dest='spsolve', action='store_const',
+                    const=True, default=False,help="""For those who don't have sparseqr, use spsolve from scipy. 
+                    Due to memory issues, please ensure your normal map is smaller than 2k*2k. 
+                    And spsolve is much more slower than sparseqr""")
 
 def write_depth_map(filename, depth, mask, v_mask, depth_type='pixel'):
     if depth_type == 'pixel':
@@ -72,7 +74,8 @@ def write_obj(filename, d, d_ind):
 
 class Normal_Integration(object):
 
-    def __init__(self, nomral_path, depth_path=None, d_lambda=100): # you can tune d_lambda to decide how much the depth prior will influence the result.
+    def __init__(self, nomral_path, depth_path=None, d_lambda=0.1, solver='sparseqr'): # you can tune d_lambda to decide how much the depth prior will influence the result.
+        self.solver = solver
         self.n, self.mask = self.read_normal_map(nomral_path) # read normal map and background mask
         self.N = None # mean-substraction matrix N defined in equation (5), "Surface-from-Gradients: An Approach Based on Discrete Geometry Processing"
         self.d_lambda = d_lambda # lambda for depth prior
@@ -99,6 +102,9 @@ class Normal_Integration(object):
         self.N = self.construct_N()
         self.NA = self.N@self.A
         self.Nb = self.N@self.b
+        if self.solver == 'spsolve':
+            self.NATNA = (self.NA.T@self.NA).tocsc()
+            self.NATNb = self.NA.T@self.Nb
 
         if depth_path is not None: # add depth prior
             A, b = self.add_depth_prior(depth_path)
@@ -198,7 +204,10 @@ class Normal_Integration(object):
         return N
 
     def mesh_deformation(self):
-        x = sparseqr.solve(self.NA, self.Nb) # solve NAx = Nb by PySPQR
+        if self.solver == 'sparseqr':
+            x = sparseqr.solve(self.NA, self.Nb) # solve NAx = Nb by PySPQR
+        else:
+            x = spsolve(self.NATNA, self.NATNb)  # solve NATNAx = NATNb by Scipy spsolve
         self.v_depth[self.v_mask] = x.reshape(-1)
 
 if __name__ == '__main__':
@@ -208,7 +217,12 @@ if __name__ == '__main__':
     start = time()
 
     print("Start reading input data...")
-    task = Normal_Integration(args.normal, args.depth, args.d_lambda)
+    if args.spsolve:
+        from scipy.sparse.linalg import spsolve # for those who don't have sparseqr
+        task = Normal_Integration(args.normal, args.depth, args.d_lambda, 'spsolve')
+    else:
+        import sparseqr
+        task = Normal_Integration(args.normal, args.depth, args.d_lambda) # by default use sparseqr which has a better performance
     print("Start normal integration...")
     task.mesh_deformation()
 
