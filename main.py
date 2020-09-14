@@ -7,6 +7,7 @@ import numpy as np
 import scipy.sparse as sparse
 
 from time import time
+from scipy.signal import convolve2d
 from sklearn.preprocessing import normalize
 
 # command line parser
@@ -23,10 +24,12 @@ parser.add_argument('--spsolve', dest='spsolve', action='store_const',
                     const=True, default=False,help="""For those who don't have sparseqr, use spsolve from scipy. 
                     Due to memory issues, please ensure your normal map is smaller than 2k*2k. 
                     And spsolve is much more slower than sparseqr""")
+parser.add_argument('--refine_depth', dest='refine_depth', action='store_const',
+                    const=True, default=False,help="""Refine depth prior by normal map. Do normal integration 
+                    with normal map only. Use the result depth map to remove outlier depth priors.""")
 
 def write_depth_map(filename, depth, mask, v_mask, depth_type='pixel'):
     if depth_type == 'pixel':
-        from scipy.signal import convolve2d
         cov_mask = np.array([0.25,0.25,0.25,0.25]).reshape(2,2)
         depth = convolve2d(depth, cov_mask, mode="valid") # keep the resolution of depth map same with the input normal map
         depth[~mask] = np.nan
@@ -72,9 +75,12 @@ def write_obj(filename, d, d_ind):
     obj.close()
 
 
+def substract_offset(d):
+    return d-np.nanmean(d)
+
 class Normal_Integration(object):
 
-    def __init__(self, nomral_path, depth_path=None, d_lambda=0.1, solver='sparseqr'): # you can tune d_lambda to decide how much the depth prior will influence the result.
+    def __init__(self, nomral_path, depth_path=None, d_lambda=0.1, solver='sparseqr', refine_depth=False): # you can tune d_lambda to decide how much the depth prior will influence the result.
         self.solver = solver
         self.n, self.mask = self.read_normal_map(nomral_path) # read normal map and background mask
         self.N = None # mean-substraction matrix N defined in equation (5), "Surface-from-Gradients: An Approach Based on Discrete Geometry Processing"
@@ -105,15 +111,30 @@ class Normal_Integration(object):
         if self.solver == 'spsolve':
             self.NATNA = (self.NA.T@self.NA).tocsc()
             self.NATNb = self.NA.T@self.Nb
-
+        
         if depth_path is not None: # add depth prior
-            A, b = self.add_depth_prior(depth_path)
+            d_prior = np.load(depth_path)
+            if refine_depth:
+                self.mesh_deformation()
+                cov_mask = np.array([0.25,0.25,0.25,0.25]).reshape(2,2)
+                d_from_normal_integration = convolve2d(self.v_depth, cov_mask, mode="valid") # keep the resolution of depth map same with the input normal map
+                d_from_normal_integration[~self.mask] = np.nan
+
+                err = np.abs(substract_offset(d_prior)-substract_offset(d_from_normal_integration))
+                err_mask = err > 10*np.nanmean(err)
+                d_prior[err_mask] = np.nan
+
+            A, b = self.add_depth_prior(d_prior)
             self.NA = sparse.vstack([self.NA, A])
             self.Nb = np.vstack([self.Nb, b])
 
-    def add_depth_prior(self, depth_path):
+        if self.solver == 'spsolve':
+            self.NATNA = (self.NA.T@self.NA).tocsc()
+            self.NATNb = self.NA.T@self.Nb
 
-        d = np.load(depth_path) # read depth prior
+
+    def add_depth_prior(self, d):
+         # read depth prior
         d_mask = ~np.isnan(d) # mask for depth prior
         d_count = (d_mask.astype(np.int32)).sum() # total number of depth prior
 
@@ -219,10 +240,10 @@ if __name__ == '__main__':
     print("Start reading input data...")
     if args.spsolve:
         from scipy.sparse.linalg import spsolve # for those who don't have sparseqr
-        task = Normal_Integration(args.normal, args.depth, args.d_lambda, 'spsolve')
+        task = Normal_Integration(args.normal, args.depth, args.d_lambda, 'spsolve', refine_depth=args.refine_depth)
     else:
         import sparseqr
-        task = Normal_Integration(args.normal, args.depth, args.d_lambda) # by default use sparseqr which has a better performance
+        task = Normal_Integration(args.normal, args.depth, args.d_lambda, refine_depth=args.refine_depth) # by default use sparseqr which has a better performance
     print("Start normal integration...")
     task.mesh_deformation()
 
