@@ -2,8 +2,8 @@
 # Modified at July 20th 2020. Support adding depth prior.
 import cv2
 import argparse
-import sparseqr
 
+import pyamg
 import numpy as np
 import scipy.sparse as sparse
 
@@ -105,6 +105,9 @@ class Normal_Integration(object):
             self.NA = sparse.vstack([self.NA, A])
             self.Nb = np.vstack([self.Nb, b])
 
+        self.NATNA = (self.NA.T@self.NA).tocsr()
+        self.NATNb = self.NA.T@self.Nb
+
     def add_depth_prior(self, depth_path):
 
         d = np.load(depth_path) # read depth prior
@@ -198,8 +201,11 @@ class Normal_Integration(object):
         return N
 
     def mesh_deformation(self):
-        x = sparseqr.solve(self.NA, self.Nb) # solve NAx = Nb by PySPQR
+        ml = pyamg.ruge_stuben_solver(self.NATNA)
+        print(ml)
+        x = ml.solve(self.NATNb, tol=1e-8)
         self.v_depth[self.v_mask] = x.reshape(-1)
+
 
 if __name__ == '__main__':
 
